@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SOP: Publishing a course on GitHub Pages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#FFFFFF; --surface:#F6ECF4; --surface2:#E8ECEF; --text:#142130; --muted:#5C6672;
+  --accent:#AD4798; --accent-strong:#4D1B42; --on-accent:#FFFFFF; --line:#E8ECEF;
+  --ok:#2E4967; --okbg:#D9E5F1; --warn:#BD3128; --warnbg:#FFF4F1; --warnline:#FF9E6F;
+  --code:#142130; --codetext:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#142130; --surface:#1F2F42; --surface2:#2E4967; --text:#FFFFFF; --muted:#D9E5F1;
+    --accent:#DEB5D6; --accent-strong:#DEB5D6; --on-accent:#142130; --line:#2E4967;
+    --ok:#D9E5F1; --okbg:#2E4967; --warn:#FFD0C0; --warnbg:#35122F; --warnline:#FF9E6F;
+    --code:#0E1824; --codetext:#FFFFFF;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#142130; --surface:#1F2F42; --surface2:#2E4967; --text:#FFFFFF; --muted:#D9E5F1;
+  --accent:#DEB5D6; --accent-strong:#DEB5D6; --on-accent:#142130; --line:#2E4967;
+  --ok:#D9E5F1; --okbg:#2E4967; --warn:#FFD0C0; --warnbg:#35122F; --warnline:#FF9E6F;
+  --code:#0E1824; --codetext:#FFFFFF;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 70px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Rethink Sans",Arial,system-ui,sans-serif;font-size:18px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+
+/* Progress bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:820px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px}
+.topbar-label{font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap}
+.track{flex:1;height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+
+main{max-width:820px;margin:0 auto;padding:40px 24px 120px}
+.screen{display:none}
+.screen.active{display:block}
+
+.pill{display:inline-block;background:var(--accent);color:var(--on-accent);font-size:14px;font-weight:600;padding:6px 14px;border-radius:99px;margin-bottom:20px}
+h1:focus,h2:focus{outline:none}
+h1{font-size:clamp(34px,6vw,52px);line-height:1.1;font-weight:700;margin:0 0 20px;letter-spacing:-0.01em}
+h2{font-size:clamp(28px,4.5vw,38px);line-height:1.15;font-weight:700;margin:0 0 16px}
+h3{font-size:22px;font-weight:600;margin:0 0 8px}
+p{margin:0 0 18px;max-width:66ch}
+.lead{font-size:20px;color:var(--muted)}
+.stage{font-size:15px;font-weight:600;color:var(--accent-strong);margin-bottom:10px}
+
+/* Start screen */
+.parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:32px 0 36px}
+.part{background:var(--surface);border-radius:16px;padding:22px 24px;border:2px solid transparent;text-align:left;font:inherit;color:var(--text);cursor:pointer;display:flex;flex-direction:column;transition:border-color .2s}
+.part:hover{border-color:var(--accent)}
+.part .go{margin-top:auto;padding-top:14px;font-size:15px;font-weight:600;color:var(--accent-strong);text-decoration:underline}
+.part h3{margin-bottom:6px}
+.part p{margin:0;font-size:16px;color:var(--muted)}
+
+/* Overview list */
+.overview{list-style:none;padding:0;margin:28px 0 36px;counter-reset:ov}
+.overview li{counter-increment:ov;display:flex;gap:18px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
+.overview li::before{content:counter(ov);flex:0 0 36px;height:36px;border-radius:50%;background:var(--surface);color:var(--accent-strong);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px;transform:translateY(-4px)}
+.overview li span{font-weight:600}
+
+/* Step-by-step reveal */
+.reveal-controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:8px 0 28px;padding:16px 20px;background:var(--surface);border-radius:14px}
+.reveal-controls .count{font-size:15px;font-weight:500;color:var(--muted)}
+.steps{list-style:none;padding:0;margin:0 0 32px}
+.steps li{display:none;gap:20px;padding:22px 0;border-top:1px solid var(--line)}
+.steps li.shown{display:flex;animation:in .3s ease}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.num{flex:0 0 44px;height:44px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:18px}
+.step-body{flex:1;min-width:0}
+.step-body p{margin:0 0 10px}
+.step-body p:last-child{margin-bottom:0}
+.ui{font-weight:600;color:var(--accent-strong)}
+
+/* Callouts */
+.note{background:var(--okbg);color:var(--ok);border-radius:12px;padding:14px 18px;font-size:16px;margin-top:10px}
+.note strong{display:block;margin-bottom:2px}
+.tbc{background:var(--warnbg);color:var(--warn);border:1px dashed var(--warnline);border-radius:12px;padding:12px 16px;font-size:16px;margin-top:10px}
+.tbc strong{display:block}
+.example{display:grid;gap:10px;margin-top:12px}
+.ex{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:16px}
+.ex .tag{font-size:14px;font-weight:600;padding:3px 10px;border-radius:99px}
+.ex .good{background:var(--okbg);color:var(--ok)}
+.ex .bad{background:var(--warnbg);color:var(--warn)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--surface2);padding:2px 7px;border-radius:6px;overflow-wrap:anywhere}
+
+/* Code blocks */
+.codewrap{position:relative;margin-top:12px;border-radius:12px;overflow:hidden;background:var(--code)}
+.codewrap pre{margin:0;padding:18px 20px;overflow-x:auto;color:var(--codetext);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
+.copy{position:absolute;top:10px;right:10px;font:500 14px "Rethink Sans",Arial,sans-serif;background:#FFFFFF;color:#142130;border:0;border-radius:8px;padding:6px 12px;cursor:pointer}
+
+/* Filename check */
+.check{margin-top:36px;background:var(--surface);border-radius:16px;padding:24px}
+.check h3{margin-bottom:4px}
+.check p{font-size:16px;color:var(--muted)}
+.check-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.check-row code{flex:1 1 260px}
+.choice{font:600 15px "Rethink Sans",Arial,sans-serif;padding:8px 16px;border-radius:99px;border:2px solid var(--accent);background:transparent;color:var(--text);cursor:pointer}
+.choice.right{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.choice.wrong{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+.feedback{flex-basis:100%;font-size:15px;min-height:0}
+
+/* Checklist */
+.checklist{list-style:none;padding:0;margin:8px 0 28px}
+.checklist li{border-top:1px solid var(--line)}
+.checklist li:last-child{border-bottom:1px solid var(--line)}
+.checklist label{display:flex;gap:16px;align-items:flex-start;padding:16px 4px;cursor:pointer}
+.checklist input{appearance:none;flex:0 0 26px;height:26px;border:2px solid var(--accent);border-radius:7px;margin:2px 0 0;display:grid;place-items:center;cursor:pointer;background:var(--bg)}
+.checklist input:checked{background:var(--accent)}
+.checklist input:checked::after{content:"";width:7px;height:13px;border:solid var(--on-accent);border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.checklist input:checked + span{color:var(--muted)}
+.done{display:none;background:var(--accent-strong);color:#FFFFFF;border-radius:16px;padding:26px 28px;margin-top:8px}
+:root[data-theme="dark"] .done{color:#142130}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .done{color:#142130}}
+.done.show{display:block;animation:in .35s ease}
+.done h3{margin-bottom:6px}
+.done p{margin:0}
+
+/* Buttons and nav */
+.btn{font:500 16px "Rethink Sans",Arial,sans-serif;padding:14px 26px;border-radius:99px;border:0;cursor:pointer;background:var(--accent);color:var(--on-accent);transition:opacity .2s}
+.btn.secondary{background:transparent;color:var(--text);border:2px solid var(--line)}
+.btn.small{padding:10px 20px;font-size:15px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.linkbtn{font:500 15px "Rethink Sans",Arial,sans-serif;background:none;border:0;color:var(--accent-strong);text-decoration:underline;cursor:pointer;padding:4px}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:12px;padding-top:24px}
+.hint{font-size:15px;color:var(--muted);margin-top:10px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media (max-width:560px){
+  body{font-size:17px}
+  main{padding:28px 18px 100px}
+  .num{flex-basis:38px;height:38px;font-size:16px}
+  .steps li{gap:14px}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-inner">
+  <span class="topbar-label" id="plabel">Start</span>
+  <div class="track" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="pfill"></div></div>
+</div></div>
+
+<main>
+
+<!-- 0 START -->
+<section class="screen active" data-label="Start">
+  <span class="pill">SOP guide</span>
+  <h1>Publishing a course on GitHub Pages</h1>
+  <p class="lead">How to take interactive lesson files, host them for free, and share one link that opens a clickable course menu.</p>
+  <div class="parts">
+    <button class="part" data-goto="1"><h3>Part 1</h3><p>Publish a new course from scratch, in six steps.</p><span class="go">Go to Part 1</span></button>
+    <button class="part" data-goto="8"><h3>Part 2</h3><p>Add or update lessons in an existing course.</p><span class="go">Go to Part 2</span></button>
+  </div>
+  <p class="hint">Choose a part to jump straight to it, or press Start to begin at Part 1. Steps appear one at a time.</p>
+  <div class="nav"><span></span><button class="btn" data-next>Start</button></div>
+</section>
+
+<!-- 1 PART 1 OVERVIEW -->
+<section class="screen" data-label="Part 1">
+  <div class="stage">Part 1</div>
+  <h2>Publish a new course from scratch</h2>
+  <p>You will move through six steps, in this order.</p>
+  <ol class="overview">
+    <li><div><span>Prepare your HTML files</span></div></li>
+    <li><div><span>Create a new course repository on GitHub</span></div></li>
+    <li><div><span>Upload your lesson files</span></div></li>
+    <li><div><span>Turn on free web hosting (GitHub Pages)</span></div></li>
+    <li><div><span>Create your course menu (README.md)</span></div></li>
+    <li><div><span>Find and share your live course link</span></div></li>
+  </ol>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next>Begin step 1</button></div>
+</section>
+
+<!-- 2 STEP 1 -->
+<section class="screen" data-label="Part 1: step 1 of 6">
+  <div class="stage">Part 1, step 1 of 6</div>
+  <h2>Prepare your HTML files</h2>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>Have your AI agent generate each lesson as a single, self-contained <code>.html</code> file, with all CSS and JavaScript inline.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Name your files using only lowercase letters, numbers and dashes. No spaces or special characters.</p>
+        <div class="example">
+          <div class="ex"><span class="tag good">Good</span><code>module1-lesson1-1-intro.html</code></div>
+          <div class="ex"><span class="tag bad">Avoid</span><code>Module 1 - Lesson 1.1 (Final).html</code></div>
+        </div></div></li>
+    </ol>
+  </div>
+  <div class="check" id="namecheck" hidden>
+    <h3>Quick check</h3>
+    <p>Would each file name follow the rule? Choose an answer for each.</p>
+    <div class="check-row" data-answer="good"><code>module2-lesson2-3-data-loop.html</code><button class="choice" data-pick="good">Good</button><button class="choice" data-pick="bad">Avoid</button><div class="feedback"></div></div>
+    <div class="check-row" data-answer="bad"><code>Lesson 2.3 Data Loop.html</code><button class="choice" data-pick="good">Good</button><button class="choice" data-pick="bad">Avoid</button><div class="feedback"></div></div>
+    <div class="check-row" data-answer="bad"><code>module2_lesson2.3(v2).html</code><button class="choice" data-pick="good">Good</button><button class="choice" data-pick="bad">Avoid</button><div class="feedback"></div></div>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: step 2</button></div>
+</section>
+
+<!-- 3 STEP 2 -->
+<section class="screen" data-label="Part 1: step 2 of 6">
+  <div class="stage">Part 1, step 2 of 6</div>
+  <h2>Create a new course repository on GitHub</h2>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>Log in at <code>github.com</code>.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Click the <span class="ui">+</span> (plus) icon in the top-right corner and select <span class="ui">New repository</span>.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Enter a <span class="ui">Repository name</span>, using dashes instead of spaces, for example <code>Course-Name-Here</code>.</p>
+        <div class="note"><strong>Remember</strong>This name becomes part of your shareable web link.</div></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Make sure <span class="ui">Public</span> is selected.</p></div></li>
+      <li><div class="num">5</div><div class="step-body"><p>Click the green <span class="ui">Create repository</span> button.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: step 3</button></div>
+</section>
+
+<!-- 4 STEP 3 -->
+<section class="screen" data-label="Part 1: step 3 of 6">
+  <div class="stage">Part 1, step 3 of 6</div>
+  <h2>Upload your lesson files</h2>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>On the new repository set-up screen, look in the middle box under <span class="ui">Quick setup</span> and click the blue link <span class="ui">uploading an existing file</span>.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Drag and drop all your <code>.html</code> lesson files into the upload box.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Wait for every file to finish uploading, then scroll to the bottom and click the green <span class="ui">Commit changes</span> button.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: step 4</button></div>
+</section>
+
+<!-- 5 STEP 4 -->
+<section class="screen" data-label="Part 1: step 4 of 6">
+  <div class="stage">Part 1, step 4 of 6</div>
+  <h2>Turn on free web hosting (GitHub Pages)</h2>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>Click the <span class="ui">Settings</span> tab near the top right of your repository menu.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>In the left sidebar, click <span class="ui">Pages</span>, under the <span class="ui">Code and automation</span> section.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Under <span class="ui">Build and deployment</span> &gt; <span class="ui">Branch</span>, change the dropdown from <span class="ui">None</span> to <span class="ui">main</span>, then click <span class="ui">Save</span>.</p></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Wait 1–2 minutes and refresh the page. Your live master URL will appear at the top.</p>
+        <div class="note"><strong>Example</strong><code>https://aurasos.github.io/How-to-github/</code></div></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: step 5</button></div>
+</section>
+
+<!-- 6 STEP 5 -->
+<section class="screen" data-label="Part 1: step 5 of 6">
+  <div class="stage">Part 1, step 5 of 6</div>
+  <h2>Create your course menu (README.md)</h2>
+  <p>This prevents a 404 error on your main link and gives learners a clickable table of contents.</p>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>Click the <span class="ui">&lt;&gt; Code</span> tab at the top left of your repository to go back to your file list.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Click the green <span class="ui">Add a README</span> button. Or click <span class="ui">Add file</span> &gt; <span class="ui">Create new file</span> and name it <code>README.md</code>.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Paste your course menu using this Markdown template. The file names in brackets must match your exact file names.</p>
+        <div class="codewrap"><button class="copy" data-copy>Copy</button><pre># Course Title Here
+
+Welcome to the course. Click any lesson below to begin:
+
+### Module 1
+* [Lesson 1.1: Lesson Title](module1-lesson1-1-filename.html)
+* [Lesson 1.2: Lesson Title](module1-lesson1-2-filename.html)
+
+### Module 2
+* [Lesson 2.1: Lesson Title](module2-lesson2-1-filename.html)</pre></div></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Click the green <span class="ui">Commit changes...</span> button in the top right, then confirm.</p></div></li>
+      <li><div class="num">5</div><div class="step-body"><p>Wait 60 seconds for your course menu to publish.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: step 6</button></div>
+</section>
+
+<!-- 7 STEP 6 -->
+<section class="screen" data-label="Part 1: step 6 of 6">
+  <div class="stage">Part 1, step 6 of 6</div>
+  <h2>Find and share your live course link</h2>
+  <p>Your course menu is now the front page of your course. Here is how to find the link to share.</p>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>In your repository, click the <span class="ui">Settings</span> tab. If you cannot see it, open the dropdown menu in the tab bar, then click <span class="ui">Settings</span>.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>In the <span class="ui">Code and automation</span> section of the left sidebar, click <span class="ui">Pages</span>.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Under <span class="ui">GitHub Pages</span>, look for the line <span class="ui">Your site is live at</span>, followed by your course link.</p>
+        <div class="note"><strong>Example</strong><code>https://aurasos.github.io/How-to-github/</code></div></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Click <span class="ui">Visit site</span> to open your course and check the menu and lesson links work.</p>
+        <div class="note"><strong>Not showing yet?</strong>Changes can take up to 10 minutes to publish. Refresh the page and try again.</div></div></li>
+      <li><div class="num">5</div><div class="step-body"><p>Copy the link from your browser’s address bar and share it. This is your master course link.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: Part 2</button></div>
+</section>
+
+<!-- 8 PART 2 INTRO -->
+<section class="screen" data-label="Part 2">
+  <div class="stage">Part 2</div>
+  <h2>Add or update lessons in an existing course</h2>
+  <p>Use this whenever you finish new lessons, such as Modules 3 and 4, or need to replace an outdated lesson. Everything happens inside your existing repository.</p>
+  <ol class="overview">
+    <li><div><span>Upload the new or updated HTML files</span></div></li>
+    <li><div><span>Add the new lessons to your menu (README.md)</span></div></li>
+  </ol>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next>Begin</button></div>
+</section>
+
+<!-- 8 PART 2 A -->
+<section class="screen" data-label="Part 2: A of B">
+  <div class="stage">Part 2, A</div>
+  <h2>Upload the new or updated HTML files</h2>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>Open your course repository on <code>github.com</code> and make sure you are on the <span class="ui">&lt;&gt; Code</span> tab.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Above the top-right corner of your file list, click <span class="ui">Add file</span> &gt; <span class="ui">Upload files</span>.</p></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Drag and drop your new <code>.html</code> files into the box.</p>
+        <div class="note"><strong>Updating an existing lesson?</strong>Upload a file with exactly the same file name as the older version. GitHub overwrites the old file automatically, so your existing links stay intact.</div></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Click the green <span class="ui">Commit changes</span> button at the bottom.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: B</button></div>
+</section>
+
+<!-- 9 PART 2 B -->
+<section class="screen" data-label="Part 2: B of B">
+  <div class="stage">Part 2, B</div>
+  <h2>Add the new lessons to your menu (README.md)</h2>
+  <div class="note" style="margin:0 0 24px"><strong>Skip this step</strong>if you only replaced an existing file with exactly the same file name.</div>
+  <div class="reveal" data-reveal>
+    <div class="reveal-controls"><button class="btn small" data-step>Show first step</button><span class="count"></span><button class="linkbtn" data-all>Show all</button></div>
+    <ol class="steps">
+      <li><div class="num">1</div><div class="step-body"><p>On the <span class="ui">&lt;&gt; Code</span> tab, click <code>README.md</code> in your file list. Or scroll down to your menu preview and click the pencil icon in the top-right corner of the box.</p></div></li>
+      <li><div class="num">2</div><div class="step-body"><p>Add your new module heading and lesson links in exactly the same format.</p>
+        <div class="codewrap"><button class="copy" data-copy>Copy</button><pre>### Module 3
+* [Lesson 3.1: New Lesson Title](module3-lesson3-1-filename.html)
+* [Lesson 3.2: New Lesson Title](module3-lesson3-2-filename.html)</pre></div></div></li>
+      <li><div class="num">3</div><div class="step-body"><p>Click the green <span class="ui">Commit changes...</span> button in the top right, then confirm.</p></div></li>
+      <li><div class="num">4</div><div class="step-body"><p>Within 60 seconds, your live course page updates automatically with the new lessons.</p></div></li>
+    </ol>
+  </div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-next data-gate>Next: recap</button></div>
+</section>
+
+<!-- 10 RECAP -->
+<section class="screen" data-label="Recap">
+  <div class="stage">Recap</div>
+  <h2>Your publishing checklist</h2>
+  <p>Tick each item as you complete it on GitHub, or use the list to check you have everything covered.</p>
+  <h3>New course</h3>
+  <ul class="checklist">
+    <li><label><input type="checkbox"><span>Each lesson is one self-contained <code>.html</code> file, named in lowercase with numbers and dashes only</span></label></li>
+    <li><label><input type="checkbox"><span>New repository created, named with dashes, set to Public</span></label></li>
+    <li><label><input type="checkbox"><span>All lesson files uploaded and changes committed</span></label></li>
+    <li><label><input type="checkbox"><span>GitHub Pages turned on, with the branch set to main</span></label></li>
+    <li><label><input type="checkbox"><span>README.md course menu added, with file names matching exactly</span></label></li>
+    <li><label><input type="checkbox"><span>Live link found under Settings &gt; Pages and checked with Visit site</span></label></li>
+    <li><label><input type="checkbox"><span>Master link copied and shared</span></label></li>
+  </ul>
+  <h3>Existing course</h3>
+  <ul class="checklist">
+    <li><label><input type="checkbox"><span>New or updated files uploaded from the Code tab and changes committed</span></label></li>
+    <li><label><input type="checkbox"><span>Updated lessons keep exactly the same file name, so links stay intact</span></label></li>
+    <li><label><input type="checkbox"><span>New lessons added to README.md in the same format</span></label></li>
+  </ul>
+  <div class="done" id="done"><h3>All done</h3><p>Every item is ticked. Your course is ready to share.</p></div>
+  <div class="nav"><button class="btn secondary" data-back>Back</button><button class="btn" data-restart>Start again</button></div>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var screens=[].slice.call(document.querySelectorAll('.screen'));
+  var current=0, fill=document.getElementById('pfill'), label=document.getElementById('plabel');
+  var bar=document.querySelector('[role=progressbar]');
+
+  function show(i){
+    screens[current].classList.remove('active');
+    current=Math.max(0,Math.min(i,screens.length-1));
+    screens[current].classList.add('active');
+    var pct=Math.round(current/(screens.length-1)*100);
+    fill.style.width=pct+'%'; bar.setAttribute('aria-valuenow',pct);
+    label.textContent=screens[current].getAttribute('data-label');
+    window.scrollTo({top:0,behavior:'auto'});
+    var h=screens[current].querySelector('h1,h2'); if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}
+  }
+
+  function gateCheck(screen){
+    var gate=screen.querySelector('[data-gate]'); if(!gate) return;
+    var ok=true;
+    screen.querySelectorAll('[data-reveal]').forEach(function(r){ if(r.querySelector('.steps li:not(.shown)')) ok=false; });
+    var nc=screen.querySelector('#namecheck');
+    if(nc && nc.querySelectorAll('.choice.right').length<nc.querySelectorAll('.check-row').length) ok=false;
+    gate.disabled=!ok;
+  }
+
+  screens.forEach(function(s){
+    s.querySelectorAll('[data-next]').forEach(function(b){b.addEventListener('click',function(){show(current+1);});});
+    s.querySelectorAll('[data-back]').forEach(function(b){b.addEventListener('click',function(){show(current-1);});});
+
+    s.querySelectorAll('[data-reveal]').forEach(function(r){
+      var items=[].slice.call(r.querySelectorAll('.steps li'));
+      var btn=r.querySelector('[data-step]'), all=r.querySelector('[data-all]'), count=r.querySelector('.count');
+      var n=0;
+      function update(){
+        count.textContent=n===0?items.length+' steps':'Step '+n+' of '+items.length;
+        if(n>=items.length){btn.textContent='All steps shown';btn.disabled=true;all.hidden=true;
+          var nc=s.querySelector('#namecheck'); if(nc) nc.hidden=false;}
+        else btn.textContent=n===0?'Show first step':'Next step';
+        gateCheck(s);
+      }
+      btn.addEventListener('click',function(){ if(n<items.length){items[n].classList.add('shown');n++;update();} });
+      all.addEventListener('click',function(){ items.forEach(function(li){li.classList.add('shown');}); n=items.length; update(); });
+      update();
+    });
+    gateCheck(s);
+  });
+
+  // Filename check
+  document.querySelectorAll('#namecheck .check-row').forEach(function(row){
+    var ans=row.getAttribute('data-answer'), fb=row.querySelector('.feedback');
+    row.querySelectorAll('.choice').forEach(function(c){
+      c.addEventListener('click',function(){
+        row.querySelectorAll('.choice').forEach(function(x){x.classList.remove('right','wrong');});
+        if(c.getAttribute('data-pick')===ans){
+          c.classList.add('right');
+          fb.textContent=ans==='good'?'Correct. Lowercase letters, numbers and dashes only.':'Correct. It breaks the rule, so avoid it.';
+        } else {
+          c.classList.add('wrong');
+          fb.textContent='Not quite. Check for capitals, spaces, dots, underscores or brackets, then try again.';
+        }
+        gateCheck(row.closest('.screen'));
+      });
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.parentNode.querySelector('pre').textContent;
+      function ok(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);}
+      if(navigator.clipboard){navigator.clipboard.writeText(t).then(ok,function(){fallback();});} else fallback();
+      function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){}document.body.removeChild(ta);}
+    });
+  });
+
+  // Checklist
+  var boxes=[].slice.call(document.querySelectorAll('.checklist input')), done=document.getElementById('done');
+  boxes.forEach(function(b){b.addEventListener('change',function(){
+    done.classList.toggle('show',boxes.every(function(x){return x.checked;}));
+  });});
+
+  document.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click',function(){show(parseInt(b.getAttribute('data-goto'),10));});
+  });
+  document.querySelector('[data-restart]').addEventListener('click',function(){show(0);});
+  show(0);
+})();
+</script>
+</body>
+</html>
